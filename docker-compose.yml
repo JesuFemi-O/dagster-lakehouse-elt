@@ -1,0 +1,82 @@
+version: "3.9" 
+services:
+  minio:
+    hostname: minio
+    image: minio/minio
+    container_name: minio
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: minio123
+      MINIO_REGION_NAME: local
+    command: server /data --console-address ":9001"
+  
+  mc-job:
+    image: 'minio/mc'
+    container_name: mc-job
+    entrypoint: |
+      /bin/bash -c "
+      sleep 5;
+      /usr/bin/mc config --quiet host add myminio http://minio:9000 minio minio123;
+      /usr/bin/mc mb --quiet myminio/warehouse
+      /usr/bin/mc mb --quiet myminio/iceberg
+      /usr/bin/mc mb --quiet myminio/landing
+      "
+    depends_on:
+      - minio
+  
+  trino:
+    hostname: trino
+    container_name: trino
+    image: 'trinodb/trino:latest'
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./infra/trino/catalog:/etc/trino/catalog
+      - "./infra/trino/server-init/post-init.sh:/tmp/post-init.sh"
+      - "./infra/trino/server-init/post-init.sql:/tmp/post-init.sql"
+      - "./infra/trino/config.properties:/etc/trino/config.properties"
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        chmod +x /tmp/post-init.sh
+        /tmp/post-init.sh
+    environment:
+      - TRINO_AUTHENTICATION_ENABLED=false
+  
+  nessie:
+    image: projectnessie/nessie
+    container_name: nessie
+    ports:
+      - 19120:19120
+  
+  sftp:
+    image: atmoz/sftp
+    container_name: sftp
+    ports:
+      - "2222:22"
+    volumes:
+      - ./infra/sftp/users.conf:/etc/sftp/users.conf:ro
+      - ./sftp-home:/home
+    restart: unless-stopped
+  
+  fake-coy-api:
+    build:
+      context: .
+      dockerfile: ./infra/dockerfiles/dockerfile.api
+    ports:
+      - "8000:8000"
+    environment:
+      - API_KEY=mysecretkey
+  
+  dremio:
+    platform: linux/x86_64
+    image: dremio/dremio-oss:latest
+    ports:
+      - 9047:9047
+      - 31010:31010
+      - 32010:32010
+    container_name: dremio

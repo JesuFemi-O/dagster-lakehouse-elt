@@ -1,10 +1,10 @@
 venv
 .env
 *.egg-info
-.env
 __pycache__
 **/*.py[cod]
 **/*$py.class
-# ignore duckdb
 *.duckdb
 *.wal
+infra/.sling/.sling.*
+env.yaml

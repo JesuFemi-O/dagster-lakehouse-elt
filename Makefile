@@ -20,6 +20,7 @@ lakehouse-setup:
 		source $(VENV_DIR)/bin/activate && \
 		echo "Installing requirements..." && \
 		pip install -r $(REQUIREMENTS_FILE); \
+		cd ./dagster && pip install -e ".[dev]"; \
 	elif [ -z "$$VIRTUAL_ENV" ]; then \
 		echo "Virtual environment is not activated. Activating..."; \
 		source $(VENV_DIR)/bin/activate; \

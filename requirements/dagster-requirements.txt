@@ -27,8 +27,6 @@ dagster-embedded-elt==0.24.10
 dagster-graphql==1.8.10
 dagster-pipes==1.8.10
 dagster-webserver==1.8.10
-# Editable install with no version control (dagster_iceberg==0.0.0)
--e /Users/emmanuelogunwede/code_space/open_source/dagster-lakehouse-elt/dagster
 dlt==1.1.0
 docstring_parser==0.16
 exceptiongroup==1.2.2
